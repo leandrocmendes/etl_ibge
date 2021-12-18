@@ -1,33 +1,42 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
-from pyspark.sql import SparkSession
+import pandas as pd
 
 def read_dataframe_from_csv(file_path, sep=','):
-    spark = SparkSession.builder.appName('ibge').getOrCreate()
-    return spark.read.csv(file_path, sep=sep, header=True, inferSchema=True)
+    """
+    Read a csv file and return a pandas dataframe.
+    """
+    return pd.read_csv(file_path, sep=sep)
 
 def start():
     print("Start!")
     return True
 
-def join_dataframes(data, ibge):
-    print("Join dataframes!")
+def merge_dataframes(data, ibge):
+    print("Merge dataframes!")
 
-    data.join(ibge, on='UF', how='inner').to_csv('/usr/local/airflow/data/datalake/silver/dados_cadastrais_ibge.csv', index=False)
-
-    return True
+    return pd.merge(data, ibge, left_on='uf', right_on='nome', how='inner')
 
 def extract_prepare_data():
     print("Extract, Prepare and Load data!")
     
     data = read_dataframe_from_csv('/usr/local/airflow/data/datalake/bronze/dados_cadastrais.csv')
-    print('Show of dataframe dados_cadastrais:')
-    print(data.show(5))
+    print('Head of dataframe dados_cadastrais:')
+    print(data.head())
     
     ibge = read_dataframe_from_csv('/usr/local/airflow/data/datalake/bronze/uf_ibge.csv')
-    print('Show of dataframe ibge:')
-    print(ibge.show(5))
+    print('Head of dataframe ibge:')
+    print(ibge.head())
+
+    merged = merge_dataframes(data, ibge)
+
+    print("Filter dataframes!")
+
+    filtered = merged.loc[(merged['sexo'] == 'Mulher') & (merged['idade'] >= 20) & (merged['idade'] <= 40)]
+    print(filtered.head())
+
+    filtered.to_csv('/usr/local/airflow/data/datalake/silver/dados_cadastrais_ibge.csv', index=False)
     
     return True        
 

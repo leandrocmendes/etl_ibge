@@ -127,3 +127,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+data/datalake/silver/dados_cadastrais_ibge.csv
