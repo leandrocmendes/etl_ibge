@@ -2,8 +2,6 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 import pandas as pd
-import requests
-import json
 
 def read_dataframe_from_csv(file_path, sep=','):
     """
@@ -119,6 +117,15 @@ def extract_average_income_by_mesoregion_in_state(state, number_mesoregion):
     average_income_by_mesoregion = data.loc[data["sigla"] == state]['renda'].sum() / number_mesoregion
     print(average_income_by_mesoregion)
 
+def extract_average_income_by_region_and_are_black_and_between_ages_and_have_degree(region, age_start, age_end, degree):
+    print(f"Extract average income by region, are black and between ages and have degree: {region} - {age_start} - {age_end} - {degree}")
+    print("Read filtered dataframe ...")
+    data = read_dataframe_from_csv('/usr/local/airflow/data/datalake/silver/dados_cadastrais_ibge.csv')
+
+    print(f"Calculate average income by region, are black and between ages and have degree: {region} - {age_start} - {age_end} - {degree}")
+    average_income_by_region_and_are_black_and_between_ages_and_have_degree = data.loc[(data["regiao_nome"] == region) & ((data["cor"] == 'Parda') | (data["cor"] == 'Preta')) & (data["idade"] >= age_start) & (data["idade"] <= age_end) & (data["graduacao"] == degree)]['renda'].mean()
+    print(average_income_by_region_and_are_black_and_between_ages_and_have_degree)
+
 default_args = {
     'owner': "Leandro Mendes Costa",
     'depends_on_past': False,
@@ -198,6 +205,13 @@ with DAG(
         dag=dag,
     )
 
+    extract_average_income_by_region_and_are_black_and_between_ages_and_have_degree_task = PythonOperator(
+        task_id="extract_average_income_by_region_and_are_black_and_between_ages_and_have_degree",
+        python_callable=extract_average_income_by_region_and_are_black_and_between_ages_and_have_degree,
+        op_kwargs={'region': 'Norte', 'age_start': 25, 'age_end': 35, 'degree': 'Sim'},
+        dag=dag,
+    )
+
 start_task >> extract_and_filter_data_task >> [
     extract_average_income_all_people_task, 
     extract_average_income_by_state_task, 
@@ -206,5 +220,6 @@ start_task >> extract_and_filter_data_task >> [
     extract_highest_average_schooling_by_state_task,
     extract_average_schooling_by_state_and_between_ages_task,
     extract_average_income_by_region_ages_and_work_force_task,
-    extract_average_income_by_mesoregion_in_state_task
+    extract_average_income_by_mesoregion_in_state_task,
+    extract_average_income_by_region_and_are_black_and_between_ages_and_have_degree_task
 ]
