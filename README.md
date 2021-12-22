@@ -13,3 +13,9 @@ Após isso o processo deve responder as seguintes perguntas:
 8. Qual é a média de renda para as pessoas na região Sul do país, que estão na força de trabalho e possuem entre 25 e 35 anos?
 9. Qual é a renda média por mesorregião produzida no estado de MG? (Para responder, você deve somar todas as rendas do estado e dividir pelo número de mesorregiões da UF.)  
 10. Qual é a renda média das mulheres que residem na região Norte do Brasil, possuem graduação, tem idade entre 25 e 35 anos e são pretas ou pardas?
+
+
+# Configuração
+Para iniciar o airflow utilizar o docker-compose disponibilizado
+Na raiz do projeto abrir o terminal na raiz do projeto e executar o seguinte comando:
+docker-compose -up -d
